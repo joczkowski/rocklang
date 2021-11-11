@@ -26,7 +26,18 @@ impl Error for ParserError {}
 
 impl PartialEq for ParserError {
     fn eq(&self, rhs: &ParserError) -> bool {
-        true
+        match (self, rhs) {
+            (
+                ParserError::SyntaxError {
+                    token: a,
+                    backtrace: _,
+                },
+                ParserError::SyntaxError {
+                    token: b,
+                    backtrace: _,
+                },
+            ) => a == b,
+        }
     }
 }
 
