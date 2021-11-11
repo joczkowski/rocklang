@@ -1,24 +1,36 @@
 use crate::expression;
 use crate::expression::{Expression, Operator};
 use crate::token::Token;
+use backtrace::Backtrace;
 use serde::Serialize;
 use std::error::Error;
-use std::fmt;
+use std::fmt::Display;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct SyntaxError {
-    pub token: Token,
+#[derive(Clone, Debug)]
+pub enum ParserError {
+    SyntaxError { token: Token, backtrace: Backtrace },
 }
+impl Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        match self {
+            ParserError::SyntaxError {
+                token,
+                backtrace: _,
+            } => {
+                write!(f, "Syntax error: unexpected token {}", token)
+            }
+        }
+    }
+}
+impl Error for ParserError {}
 
-impl fmt::Display for SyntaxError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Syntax error: unexpected token {}", self.token)
+impl PartialEq for ParserError {
+    fn eq(&self, rhs: &ParserError) -> bool {
+        true
     }
 }
 
-impl Error for SyntaxError {}
-
-type Result<T> = std::result::Result<T, SyntaxError>;
+type Result<T> = std::result::Result<T, ParserError>;
 
 #[derive(Copy, Clone, Serialize, Debug)]
 pub enum Type {
@@ -81,8 +93,9 @@ impl Parser {
                 match self.advance() {
                     Token::LCurly => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 };
@@ -118,8 +131,9 @@ impl Parser {
                 match self.advance() {
                     Token::LCurly => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 };
@@ -144,8 +158,9 @@ impl Parser {
                     match self.advance() {
                         Token::LCurly => (),
                         _ => {
-                            return Err(SyntaxError {
+                            return Err(ParserError::SyntaxError {
                                 token: self.previous().clone(),
+                                backtrace: Backtrace::new(),
                             })
                         }
                     };
@@ -353,22 +368,25 @@ impl Parser {
                                             "vec" => Type::Vector,
                                             "fun" => Type::Function,
                                             _ => {
-                                                return Err(SyntaxError {
+                                                return Err(ParserError::SyntaxError {
                                                     token: self.previous().clone(),
+                                                    backtrace: Backtrace::new(),
                                                 })
                                             }
                                         },
                                     });
                                 }
                                 _ => {
-                                    return Err(SyntaxError {
+                                    return Err(ParserError::SyntaxError {
                                         token: self.previous().clone(),
+                                        backtrace: Backtrace::new(),
                                     })
                                 }
                             },
                             _ => {
-                                return Err(SyntaxError {
+                                return Err(ParserError::SyntaxError {
                                     token: self.previous().clone(),
+                                    backtrace: Backtrace::new(),
                                 })
                             }
                         }
@@ -385,8 +403,9 @@ impl Parser {
                 match self.advance() {
                     Token::Colon => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 }
@@ -397,14 +416,16 @@ impl Parser {
                         "vec" => Type::Vector,
                         "void" => Type::Null,
                         _ => {
-                            return Err(SyntaxError {
+                            return Err(ParserError::SyntaxError {
                                 token: self.previous().clone(),
+                                backtrace: Backtrace::new(),
                             })
                         }
                     },
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 };
@@ -412,8 +433,9 @@ impl Parser {
                 match self.advance() {
                     Token::Arrow => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 }
@@ -421,8 +443,9 @@ impl Parser {
                 match self.advance() {
                     Token::LCurly => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 }
@@ -481,8 +504,9 @@ impl Parser {
                         });
                     }
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.peek().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 }
@@ -503,8 +527,9 @@ impl Parser {
                 match self.advance() {
                     Token::RightParen => (),
                     _ => {
-                        return Err(SyntaxError {
+                        return Err(ParserError::SyntaxError {
                             token: self.previous().clone(),
+                            backtrace: Backtrace::new(),
                         })
                     }
                 };
